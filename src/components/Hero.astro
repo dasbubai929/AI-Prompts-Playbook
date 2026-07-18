@@ -1,0 +1,39 @@
+---
+export interface Props {
+  title: string;
+  subtitle: string;
+  showSearch?: boolean;
+}
+const { title, subtitle, showSearch = false } = Astro.props;
+---
+
+<section class="relative overflow-hidden py-24 sm:py-32 lg:py-40">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 mesh-gradient opacity-[0.08] blur-3xl"></div>
+
+  <div class="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+    <h1 class="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl [text-wrap:balance]">
+      <span class="gradient-text">{title}</span>
+    </h1>
+
+    <p class="mt-4 text-lg text-body sm:text-xl [text-wrap:balance]">
+      {subtitle}
+    </p>
+
+    {showSearch && (
+      <div class="mx-auto mt-10 max-w-2xl">
+        <form action="/search" method="GET" role="search" class="relative">
+          <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-mute" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            type="search"
+            name="q"
+            placeholder="Search prompts by niche, task, or keyword..."
+            class="w-full rounded-full border border-white/10 bg-white/5 py-4 pl-12 pr-4 text-sm text-canvas placeholder:text-mute transition-all duration-300 focus:border-link/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-link/20"
+            aria-label="Search prompts"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </form>
+      </div>
+    )}
+  </div>
+</section>

@@ -1,0 +1,122 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Contact AI Prompting Playbook',
+  description: 'Get in touch with the AI Prompting Playbook team.',
+  url: 'https://ai-prompting-playbook.pages.dev/contact',
+});
+---
+
+<Layout
+  title="Contact"
+  description="Get in touch with the AI Prompting Playbook team. Share suggestions, report issues, or request new prompts."
+  canonical="https://ai-prompting-playbook.pages.dev/contact"
+  schema={schema}
+>
+  <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8 sm:py-24">
+    <div class="text-center">
+      <span class="inline-block rounded-full bg-violet/20 px-3 py-1 text-xs font-medium text-violet-soft font-mono">Contact</span>
+      <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+        Get in <span class="gradient-text">Touch</span>
+      </h1>
+      <p class="mt-3 text-base text-body">
+        Have a suggestion, a prompt request, or just want to say hello? We would love to hear from you.
+      </p>
+    </div>
+
+    <form
+      action="mailto:hello@aipromptingplaybook.com"
+      method="post"
+      enctype="text/plain"
+      class="mt-12 space-y-6"
+      aria-label="Contact form"
+    >
+      <div>
+        <label for="name" class="block text-sm font-medium text-canvas">
+          Name
+          <span class="text-error" aria-hidden="true">*</span>
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          autocomplete="name"
+          placeholder="Your full name"
+          class="mt-1.5 block w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-canvas placeholder:text-mute transition-all duration-200 focus:border-link/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-link/20"
+        />
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-medium text-canvas">
+          Email
+          <span class="text-error" aria-hidden="true">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+          class="mt-1.5 block w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-canvas placeholder:text-mute transition-all duration-200 focus:border-link/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-link/20"
+        />
+      </div>
+
+      <div>
+        <label for="subject" class="block text-sm font-medium text-canvas">
+          Subject
+          <span class="text-error" aria-hidden="true">*</span>
+        </label>
+        <select
+          id="subject"
+          name="subject"
+          required
+          class="mt-1.5 block w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-canvas transition-all duration-200 focus:border-link/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-link/20"
+        >
+          <option value="" disabled selected>Select a topic…</option>
+          <option value="suggestion">Prompt Suggestion</option>
+          <option value="bug">Report an Issue</option>
+          <option value="request">New Category Request</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="message" class="block text-sm font-medium text-canvas">
+          Message
+          <span class="text-error" aria-hidden="true">*</span>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          required
+          rows="6"
+          placeholder="Your message..."
+          class="mt-1.5 block w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-canvas placeholder:text-mute transition-all duration-200 focus:border-link/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-link/20 resize-y"
+        ></textarea>
+      </div>
+
+      <button
+        type="submit"
+        class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-canvas px-6 py-3 text-sm font-semibold text-ink transition-all duration-200 hover:opacity-90 hover:shadow-vercel-md"
+      >
+        Send Message
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </form>
+
+    <div class="mt-12 rounded-lg border border-white/5 bg-white/[0.03] p-6">
+      <h2 class="text-sm font-semibold text-canvas">Other Ways to Reach Us</h2>
+      <p class="mt-2 text-sm text-body">
+        You can also email us directly at{" "}
+        <a href="mailto:hello@aipromptingplaybook.com" class="text-link transition-colors hover:text-link-deep">
+          hello@aipromptingplaybook.com
+        </a>
+      </p>
+    </div>
+  </div>
+</Layout>

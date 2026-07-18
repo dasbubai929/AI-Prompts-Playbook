@@ -1,0 +1,71 @@
+---
+import type { Prompt } from '../data/prompts';
+
+export interface Props {
+  prompt: Prompt;
+  featured?: boolean;
+}
+
+const { prompt, featured = false } = Astro.props;
+---
+
+<article
+  class={`group relative rounded-lg border border-white/5 bg-white/[0.03] transition-all duration-300 card-hover ${
+    featured ? 'p-6 sm:p-8' : 'p-5 sm:p-6'
+  }`}
+>
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1 min-w-0">
+      {featured && (
+        <span class="mb-2 inline-flex items-center gap-1 rounded-full bg-violet/20 px-2.5 py-0.5 text-xs font-medium text-violet-soft">
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Trending
+        </span>
+      )}
+      <h3 class={`font-semibold text-canvas ${featured ? 'text-lg' : 'text-base'}`}>
+        <a href={`/prompts/${prompt.slug}`} class="transition-colors hover:text-link">
+          {prompt.title}
+        </a>
+      </h3>
+      <p class={`mt-1.5 text-body leading-relaxed ${featured ? 'text-sm' : 'text-xs'}`}>
+        {prompt.description}
+      </p>
+    </div>
+
+    <button
+      class="copy-btn shrink-0 flex items-center gap-1.5 rounded-pill-sm border border-white/10 px-3 py-1.5 text-xs font-medium text-body transition-all duration-200 hover:border-link/50 hover:text-link hover:bg-link/5"
+      data-prompt={prompt.promptText}
+      aria-label={`Copy ${prompt.title} prompt`}
+    >
+      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-1.5">
+    {prompt.tags.map((tag) => (
+      <span class="inline-flex rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-mute font-mono">
+        #{tag}
+      </span>
+    ))}
+  </div>
+</article>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const text = btn.getAttribute('data-prompt');
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        btn.classList.add('text-success', 'border-success/30', 'hover:text-success');
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.classList.remove('text-success', 'border-success/30', 'hover:text-success');
+        }, 2000);
+      } catch { /* clipboard not available */ }
+    });
+  });
+</script>

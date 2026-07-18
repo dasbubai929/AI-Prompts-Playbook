@@ -1,0 +1,54 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CategoryTabs from '../../components/CategoryTabs.astro';
+import PromptGrid from '../../components/PromptGrid.astro';
+import { categories } from '../../data/categories';
+import { prompts } from '../../data/prompts';
+
+export async function getStaticPaths() {
+  return categories.map((cat) => ({
+    params: { slug: cat.slug },
+    props: { category: cat },
+  }));
+}
+
+const { category } = Astro.props;
+const categoryPrompts = prompts.filter((p) => p.category === category.id);
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `AI Prompts for ${category.name}`,
+  description: category.description,
+  url: `https://ai-prompting-playbook.pages.dev/category/${category.slug}`,
+});
+---
+
+<Layout
+  title={`AI Prompts for ${category.name}`}
+  description={category.description}
+  canonical={`https://ai-prompting-playbook.pages.dev/category/${category.slug}`}
+  schema={schema}
+>
+  <section class="relative overflow-hidden py-20 sm:py-24">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 mesh-gradient opacity-[0.06] blur-3xl"></div>
+    <div class="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+      <span class="text-4xl" aria-hidden="true">{category.icon}</span>
+      <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <span class="gradient-text">AI Prompts for {category.name}</span>
+      </h1>
+      <p class="mt-3 text-base text-body">{category.description}</p>
+    </div>
+  </section>
+
+  <CategoryTabs activeCategory={category.id} />
+
+  <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="mb-6 flex items-center justify-between">
+      <p class="text-sm text-mute">
+        {categoryPrompts.length} prompt{categoryPrompts.length !== 1 ? 's' : ''} available
+      </p>
+    </div>
+    <PromptGrid prompts={categoryPrompts} />
+  </section>
+</Layout>

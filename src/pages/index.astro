@@ -1,0 +1,71 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import CategoryTabs from '../components/CategoryTabs.astro';
+import FeaturedPrompts from '../components/FeaturedPrompts.astro';
+import { categories } from '../data/categories';
+import { blogPosts } from '../data/blog';
+import BlogCard from '../components/BlogCard.astro';
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'AI Prompting Playbook',
+  description: 'Enterprise-grade AI prompts across every niche. Search, copy, and deploy with confidence.',
+  url: 'https://ai-prompting-playbook.pages.dev',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://ai-prompting-playbook.pages.dev/search?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+});
+---
+
+<Layout
+  title="Enterprise-Grade AI Prompting Playbook"
+  description="Search, copy, and deploy prompts across niches. Enterprise-grade AI prompts for HR, marketing, course creators, SEO, and SaaS."
+  schema={schema}
+>
+  <Hero
+    title="Enterprise-Grade AI Prompting Playbook"
+    subtitle="Search, copy, and deploy prompts across niches"
+    showSearch={true}
+  />
+
+  <CategoryTabs />
+
+  <FeaturedPrompts />
+
+  <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="mb-10 text-center">
+      <span class="inline-block rounded-full bg-violet/20 px-3 py-1 text-xs font-medium text-violet-soft font-mono">Articles</span>
+      <h2 class="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">Latest from the Blog</h2>
+      <p class="mt-2 text-sm text-body">Prompt engineering insights and tutorials</p>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {blogPosts.slice(0, 3).map((post) => (
+        <BlogCard post={post} />
+      ))}
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="mb-10 text-center">
+      <span class="inline-block rounded-full bg-violet/20 px-3 py-1 text-xs font-medium text-violet-soft font-mono">Categories</span>
+      <h2 class="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">Browse by Niche</h2>
+      <p class="mt-2 text-sm text-body">Find the perfect prompt for your domain</p>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {categories.map((cat) => (
+        <a
+          href={`/category/${cat.slug}`}
+          class="group rounded-lg border border-white/5 bg-white/[0.03] p-6 text-center transition-all duration-300 card-hover"
+        >
+          <span class="text-3xl" aria-hidden="true">{cat.icon}</span>
+          <h3 class="mt-3 text-sm font-semibold text-canvas group-hover:text-link transition-colors">{cat.name}</h3>
+          <p class="mt-1 text-xs text-body leading-relaxed">{cat.description}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>

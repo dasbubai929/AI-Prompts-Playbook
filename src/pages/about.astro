@@ -1,0 +1,83 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: 'About AI Prompting Playbook',
+  description: 'Our mission to provide enterprise-grade AI prompts across every niche.',
+  url: 'https://ai-prompting-playbook.pages.dev/about',
+});
+---
+
+<Layout
+  title="About"
+  description="Learn about the AI Prompting Playbook — our mission, vision, and approach to enterprise-grade AI prompting."
+  canonical="https://ai-prompting-playbook.pages.dev/about"
+  schema={schema}
+>
+  <div class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8 sm:py-24">
+    <div class="text-center">
+      <span class="inline-block rounded-full bg-violet/20 px-3 py-1 text-xs font-medium text-violet-soft font-mono">About</span>
+      <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+        Our <span class="gradient-text">Mission</span>
+      </h1>
+    </div>
+
+    <div class="mt-12 space-y-8 text-base text-body leading-relaxed">
+      <p>
+        The <strong class="text-canvas">AI Prompting Playbook</strong> is a curated library of enterprise-grade AI prompts 
+        designed for professionals across every industry. We believe that the quality of AI output is determined by the 
+        quality of the input — and great prompts should be shared, not reinvented.
+      </p>
+
+      <p>
+        Our platform provides ready-to-use, battle-tested prompts organized by professional niche. Whether you are in 
+        HR, marketing, education, SEO, or software development, you will find prompts that save you hours of trial 
+        and error.
+      </p>
+
+      <h2 class="text-xl font-semibold text-canvas">Why We Built This</h2>
+      <p>
+        Prompt engineering is the most accessible high-leverage skill in the AI era. Yet most professionals spend 
+        countless hours crafting prompts from scratch — often producing mediocre results. We built the Playbook to 
+        solve this: a searchable, categorized collection of prompts that have been refined through hundreds of iterations.
+      </p>
+
+      <h2 class="text-xl font-semibold text-canvas">Our Approach</h2>
+      <ul class="space-y-3">
+        <li class="flex items-start gap-3">
+          <span class="mt-1 text-link shrink-0">→</span>
+          <span><strong class="text-canvas">Research-backed:</strong> Every prompt is grounded in prompt engineering best practices and real-world testing.</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-1 text-link shrink-0">→</span>
+          <span><strong class="text-canvas">Domain-specific:</strong> Prompts are tailored to specific professional contexts with relevant terminology and constraints.</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-1 text-link shrink-0">→</span>
+          <span><strong class="text-canvas">Iteratively refined:</strong> Each prompt has been tested and improved based on output quality and user feedback.</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-1 text-link shrink-0">→</span>
+          <span><strong class="text-canvas">Always evolving:</strong> We continuously update our library as AI capabilities and best practices advance.</span>
+        </li>
+      </ul>
+
+      <h2 class="text-xl font-semibold text-canvas">Our Vision</h2>
+      <p>
+        We envision a world where every professional has access to expertly crafted AI prompts — eliminating the 
+        friction between intent and output. The Playbook is our contribution to making AI more accessible, more 
+        effective, and more professional for everyone.
+      </p>
+
+      <div class="mt-8 rounded-lg border border-white/5 bg-white/[0.03] p-6 text-center">
+        <p class="text-sm text-mute">Have ideas or suggestions?</p>
+        <a href="/contact" class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-link transition-colors hover:text-link-deep">
+          We would love to hear from you
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,132 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { prompts } from '../../data/prompts';
+import { categories } from '../../data/categories';
+
+export async function getStaticPaths() {
+  return prompts.map((p) => ({
+    params: { slug: p.slug },
+    props: { prompt: p },
+  }));
+}
+
+const { prompt } = Astro.props;
+const category = categories.find((c) => c.id === prompt.category);
+const related = prompts
+  .filter((p) => p.category === prompt.category && p.id !== prompt.id)
+  .slice(0, 3);
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: prompt.title,
+  description: prompt.description,
+  about: {
+    '@type': 'Thing',
+    name: prompt.tags.join(', '),
+  },
+  url: `https://ai-prompting-playbook.pages.dev/prompts/${prompt.slug}`,
+});
+---
+
+<Layout
+  title={prompt.title}
+  description={prompt.description}
+  canonical={`https://ai-prompting-playbook.pages.dev/prompts/${prompt.slug}`}
+  schema={schema}
+  ogType="article"
+>
+  <div class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+    <nav class="mb-8 text-sm">
+      <a href="/" class="text-body transition-colors hover:text-canvas">Home</a>
+      <span class="mx-2 text-mute">/</span>
+      {category && (
+        <>
+          <a href={`/category/${category.slug}`} class="text-body transition-colors hover:text-canvas">
+            {category.name}
+          </a>
+          <span class="mx-2 text-mute">/</span>
+        </>
+      )}
+      <span class="text-mute">{prompt.title}</span>
+    </nav>
+
+    <article>
+      <div class="mb-8">
+        {category && (
+          <span class="inline-flex items-center gap-1 rounded-full bg-violet/20 px-3 py-1 text-xs font-medium text-violet-soft font-mono">
+            {category.icon} {category.name}
+          </span>
+        )}
+        <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{prompt.title}</h1>
+        <p class="mt-3 text-base text-body leading-relaxed">{prompt.description}</p>
+
+        <div class="mt-4 flex flex-wrap items-center gap-1.5">
+          {prompt.tags.map((tag) => (
+            <span class="inline-flex rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium text-mute font-mono">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div class="relative rounded-lg border border-white/5 bg-white/[0.03] p-6 sm:p-8">
+        <div class="absolute right-4 top-4">
+          <button
+            id="copy-full-prompt"
+            class="inline-flex items-center gap-1.5 rounded-pill-sm border border-white/10 px-3 py-1.5 text-xs font-medium text-body transition-all duration-200 hover:border-link/50 hover:text-link hover:bg-link/5"
+            data-prompt={prompt.promptText}
+            aria-label="Copy full prompt"
+          >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Prompt
+          </button>
+        </div>
+        <pre class="overflow-x-auto whitespace-pre-wrap text-sm text-body leading-relaxed font-mono">
+{prompt.promptText}</pre>
+      </div>
+    </article>
+
+    {related.length > 0 && (
+      <section class="mt-16">
+        <h2 class="mb-6 text-xl font-semibold tracking-tight">Related Prompts</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {related.map((rp) => (
+            <a
+              href={`/prompts/${rp.slug}`}
+              class="group rounded-lg border border-white/5 bg-white/[0.03] p-5 transition-all duration-300 card-hover"
+            >
+              <h3 class="text-sm font-semibold text-canvas group-hover:text-link transition-colors">{rp.title}</h3>
+              <p class="mt-1.5 text-xs text-body line-clamp-2">{rp.description}</p>
+              <div class="mt-3 flex flex-wrap gap-1.5">
+                {rp.tags.slice(0, 3).map((t) => (
+                  <span class="inline-flex rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-mute font-mono">#{t}</span>
+                ))}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</Layout>
+
+<script>
+  const btn = document.getElementById('copy-full-prompt');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const text = btn.getAttribute('data-prompt');
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        btn.classList.add('text-success', 'border-success/30');
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.classList.remove('text-success', 'border-success/30');
+        }, 2000);
+      } catch { /* clipboard fallback */ }
+    });
+  }
+</script>

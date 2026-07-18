@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-ink text-canvas font-sans antialiased;
+  }
+  ::selection {
+    background-color: #171717;
+    color: #f2f2f2;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-link ring-offset-2 ring-offset-ink;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-gradient-develop-start via-gradient-preview-end to-gradient-ship-end bg-[length:200%_200%] animate-gradient;
+  }
+  .mesh-gradient {
+    background: linear-gradient(135deg, #007cf0 0%, #7928ca 25%, #ff0080 50%, #ff4d4d 75%, #f9cb28 100%);
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-vercel-lg hover:-translate-y-0.5;
+  }
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+}
+
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
