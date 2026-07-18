@@ -2,8 +2,11 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 
+import cloudflare from "@astrojs/cloudflare";
+
 export default defineConfig({
   integrations: [tailwind(), sitemap()],
   output: 'static',
-  site: 'https://aiplaybook.dasbubai929.workers.dev',
+  site: 'https://ai-prompts-playbook.dasbubai929.workers.dev',
+  adapter: cloudflare()
 });

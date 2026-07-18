@@ -1,0 +1,4 @@
+/robots.txt
+  Cache-Control: no-cache, no-store, must-revalidate
+/sitemap*
+  Cache-Control: no-cache, no-store, must-revalidate

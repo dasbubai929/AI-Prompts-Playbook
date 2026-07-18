@@ -1,0 +1,47 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { categories } from '../data/categories';
+---
+
+<Layout title="Page Not Found" description="The page you're looking for doesn't exist.">
+  <div class="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-4 text-center">
+    <span class="text-8xl font-semibold leading-none gradient-text">404</span>
+
+    <h1 class="mt-6 text-2xl font-semibold tracking-tight sm:text-3xl">Page not found</h1>
+    <p class="mt-3 text-sm text-body leading-relaxed max-w-md">
+      The page you are looking for does not exist or has been moved.
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 rounded-pill bg-canvas px-5 py-2.5 text-sm font-semibold text-ink transition-all duration-200 hover:opacity-90 hover:shadow-vercel-md"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Back to Home
+      </a>
+      <a
+        href="/contact"
+        class="inline-flex items-center gap-2 rounded-pill border border-white/10 px-5 py-2.5 text-sm font-medium text-body transition-all duration-200 hover:text-canvas hover:border-white/20"
+      >
+        Report Issue
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+
+    <div class="mt-12 w-full border-t border-white/5 pt-8">
+      <p class="mb-4 text-xs font-medium uppercase tracking-wider text-mute font-mono">Browse by Category</p>
+      <nav class="flex flex-wrap items-center justify-center gap-2" aria-label="Categories for 404 navigation">
+        {categories.map((cat) => (
+          <a
+            href={`/category/${cat.slug}`}
+            class="inline-flex items-center gap-1 rounded-pill-sm border border-white/10 px-3 py-1.5 text-xs text-body transition-all duration-200 hover:text-canvas hover:border-white/20"
+          >
+            <span aria-hidden="true">{cat.icon}</span>
+            {cat.name}
+          </a>
+        ))}
+      </nav>
+    </div>
+  </div>
+</Layout>
