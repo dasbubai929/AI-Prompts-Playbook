@@ -1,0 +1,36 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro"
+import { prompts, categories } from "../data/prompts"
+---
+<BaseLayout title="Enterprise-Grade AI Prompting Playbook">
+  <main id="content">
+    <section class="section hero">
+      <div class="container">
+        <p class="eyebrow">Enterprise-Ready Infrastructure</p>
+        <h1>Enterprise-Grade AI Prompting Playbook</h1>
+        <p class="lead">Search, copy, and deploy prompts across niches</p>
+      </div>
+    </section>
+
+    <section class="section prompts-section">
+      <div class="container">
+        <div class="prompts-grid">
+          {prompts.map(p => (
+            <article class="prompt-card">
+              <div class="prompt-tags">
+                <span class="tag highlight">{p.niche}</span>
+                {p.tags.map(t => <span class="tag">{t}</span>)}
+              </div>
+              <h2 class="prompt-title">{p.title}</h2>
+              <p class="prompt-desc">{p.desc}</p>
+              <div class="prompt-footer">
+                <span class="prompt-updated">{p.updated}</span>
+                <a href={"/prompt/" + p.id} class="btn btn-secondary">View Details</a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
