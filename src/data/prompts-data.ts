@@ -14,7 +14,7 @@ export const prompts: Prompt[] = [
   {
     id: 'job-description',
     title: 'Legally Compliant Job Description Prompt',
-    slug: 'legally-compliant-job-description',
+    slug: 'duplicate-slug-test',
     description: 'Generate inclusive, legally compliant job descriptions that attract diverse talent while avoiding bias.',
     category: 'hr-recruiting',
     tags: ['job-descriptions', 'compliance', 'diversity', 'hiring'],
