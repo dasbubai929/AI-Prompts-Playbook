@@ -1,0 +1,146 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+export const prerender = false;
+
+// We use `Astro.locals.runtime.env` for Cloudflare environment variables and bindings
+const env = Astro.locals.runtime?.env as any;
+const adminPass = env?.ADMIN_PASS || 'default-secret-change-me';
+
+let isAuthenticated = false;
+
+// Check cookie
+const authCookie = Astro.cookies.get('admin_auth');
+if (authCookie && authCookie.value === adminPass) {
+  isAuthenticated = true;
+}
+
+// Handle login POST
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const password = data.get('password');
+  
+  // Logout handling
+  if (data.get('action') === 'logout') {
+    Astro.cookies.delete('admin_auth', { path: '/' });
+    isAuthenticated = false;
+  } else if (password === adminPass) {
+    Astro.cookies.set('admin_auth', adminPass, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
+    isAuthenticated = true;
+  }
+}
+
+// Fetch submissions if authenticated
+let submissions: any[] = [];
+if (isAuthenticated && env?.CONTACT_FORM) {
+  try {
+    const listResult = await env.CONTACT_FORM.list({ prefix: 'submission:' });
+    for (const key of listResult.keys) {
+      const value = await env.CONTACT_FORM.get(key.name);
+      if (value) {
+        submissions.push(JSON.parse(value));
+      }
+    }
+    // Sort by newest first
+    submissions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+  } catch (err) {
+    console.error("Error fetching submissions:", err);
+  }
+}
+---
+
+<Layout title="Admin Dashboard | Contact Messages" description="Secure admin dashboard for contact submissions">
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="mb-8 flex items-center justify-between">
+      <h1 class="text-2xl font-semibold text-canvas sm:text-3xl">Contact Messages</h1>
+      {isAuthenticated && (
+        <form method="POST">
+          <input type="hidden" name="action" value="logout" />
+          <button type="submit" class="rounded-full border border-white/10 px-4 py-1.5 text-sm font-medium text-body transition-colors hover:bg-white/5 hover:text-canvas">
+            Logout
+          </button>
+        </form>
+      )}
+    </div>
+
+    {!isAuthenticated ? (
+      <div class="mx-auto mt-16 max-w-sm rounded-xl border border-white/10 bg-white/5 p-8 shadow-xl">
+        <h2 class="mb-6 text-center text-xl font-medium text-canvas">Admin Login</h2>
+        <form method="POST" class="space-y-5">
+          <div>
+            <label for="password" class="mb-1.5 block text-sm font-medium text-canvas">Password</label>
+            <input 
+              type="password" 
+              name="password" 
+              id="password"
+              required
+              placeholder="••••••••"
+              class="block w-full rounded-lg border border-white/10 bg-ink px-4 py-2 text-canvas placeholder:text-mute focus:border-link/50 focus:outline-none focus:ring-2 focus:ring-link/20" 
+            />
+          </div>
+          <button type="submit" class="w-full rounded-lg bg-canvas px-4 py-2 font-semibold text-ink transition-all hover:bg-white/90">
+            Secure Login
+          </button>
+        </form>
+      </div>
+    ) : (
+      <div class="space-y-6">
+        <div class="relative max-w-md">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search by name, email, or message..." 
+            class="block w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-canvas placeholder:text-mute focus:border-link/50 focus:outline-none focus:ring-2 focus:ring-link/20" 
+          />
+        </div>
+        
+        <div class="overflow-x-auto rounded-xl border border-white/10 bg-white/3 shadow-xl">
+          <table class="min-w-full text-left text-sm" id="messagesTable">
+            <thead class="border-b border-white/10 bg-white/5 text-canvas">
+              <tr>
+                <th class="p-4 font-semibold">Date</th>
+                <th class="p-4 font-semibold">Name</th>
+                <th class="p-4 font-semibold">Email</th>
+                <th class="p-4 font-semibold">Subject</th>
+                <th class="p-4 font-semibold">Message</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 text-body">
+              {submissions.map((sub) => (
+                <tr class="transition-colors hover:bg-white/5">
+                  <td class="whitespace-nowrap p-4 text-mute">{new Date(sub.submittedAt).toLocaleDateString()}</td>
+                  <td class="p-4 font-medium text-canvas">{sub.name}</td>
+                  <td class="p-4"><a href={`mailto:${sub.email}`} class="text-link hover:underline">{sub.email}</a></td>
+                  <td class="p-4">{sub.subject || '-'}</td>
+                  <td class="p-4 max-w-sm truncate" title={sub.message}>{sub.message}</td>
+                </tr>
+              ))}
+              {submissions.length === 0 && (
+                <tr><td colspan="5" class="p-8 text-center text-mute">No messages have been submitted yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script>
+  // Simple client-side filter
+  const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const term = (e.target as HTMLInputElement).value.toLowerCase();
+      const rows = document.querySelectorAll('#messagesTable tbody tr');
+      rows.forEach(row => {
+        // Skip the "No messages" row if it exists
+        if (row.querySelector('td')?.getAttribute('colspan')) return;
+        
+        const text = row.textContent?.toLowerCase() || '';
+        (row as HTMLElement).style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+  }
+</script>

@@ -1,22 +1,23 @@
-export async function onRequestPost(context) {
+import type { APIRoute } from 'astro';
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    const requestOrigin = context.request.headers.get('origin');
-    
-    // Parse form data
-    const formData = await context.request.formData();
-    const name = formData.get('name');
-    const email = formData.get('email');
-    const subject = formData.get('subject');
-    const message = formData.get('message');
-    
+    const formData = await request.formData();
+    const name = formData.get('name')?.toString();
+    const email = formData.get('email')?.toString();
+    const subject = formData.get('subject')?.toString();
+    const message = formData.get('message')?.toString();
+
     // Honeypot check for CSRF/Spam
     const honeypot = formData.get('website');
     if (honeypot) {
-       // Return fake success for bots
-       return new Response(JSON.stringify({ success: true }), { 
-         status: 200,
-         headers: { 'Content-Type': 'application/json' }
-       });
+      // Return fake success for bots
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     if (!name || !email || !message) {
@@ -35,12 +36,13 @@ export async function onRequestPost(context) {
       subject,
       message,
       submittedAt: new Date().toISOString(),
-      ip: context.request.headers.get('CF-Connecting-IP')
+      ip: request.headers.get('CF-Connecting-IP') || 'unknown'
     };
 
     // Store the submission in the CONTACT_FORM KV namespace
-    if (context.env.CONTACT_FORM) {
-      await context.env.CONTACT_FORM.put(`submission:${id}`, JSON.stringify(submission));
+    const env = locals.runtime.env as any;
+    if (env.CONTACT_FORM) {
+      await env.CONTACT_FORM.put(`submission:${id}`, JSON.stringify(submission));
     } else {
       console.warn("CONTACT_FORM KV binding not found, skipping storage.");
     }
@@ -49,10 +51,10 @@ export async function onRequestPost(context) {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
-  } catch (error) {
+  } catch (error: any) {
     return new Response(JSON.stringify({ error: 'Server error: ' + error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
   }
-}
+};
