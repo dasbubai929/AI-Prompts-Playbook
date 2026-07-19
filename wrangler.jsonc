@@ -13,5 +13,11 @@
   "assets": {
     "binding": "ASSETS",
     "directory": "dist"
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "your_kv_namespace_id"
+    }
+  ]
 }

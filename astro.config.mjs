@@ -8,5 +8,6 @@ export default defineConfig({
   integrations: [tailwind(), sitemap()],
   output: 'static',
   site: 'https://ai-prompts-playbook.dasbubai929.workers.dev',
-  adapter: cloudflare()
+  adapter: cloudflare(),
+  image: { service: "compile" }
 });

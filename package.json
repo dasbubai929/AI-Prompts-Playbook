@@ -1,9 +1,11 @@
 {
+  "tsx": "^4.17.0",
   "name": "ai-prompting-playbook",
   "version": "1.0.0",
   "description": "Enterprise-Grade AI Prompting Playbook",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "tsx scripts/validate-content.ts",
     "build": "astro build",
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
@@ -22,6 +24,9 @@
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.20",
+    "tsx": "^4.23.1",
     "wrangler": "^4.112.0"
   }
 }
