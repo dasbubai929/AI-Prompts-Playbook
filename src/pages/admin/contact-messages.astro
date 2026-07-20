@@ -16,18 +16,34 @@ if (authCookie && authCookie.value === adminPass) {
   isAuthenticated = true;
 }
 
-// Handle login POST
+// Handle POST actions
 if (Astro.request.method === 'POST') {
   const data = await Astro.request.formData();
-  const password = data.get('password');
+  const action = data.get('action');
   
-  // Logout handling
-  if (data.get('action') === 'logout') {
+  if (action === 'logout') {
     Astro.cookies.delete('admin_auth', { path: '/' });
     isAuthenticated = false;
-  } else if (password === adminPass) {
-    Astro.cookies.set('admin_auth', adminPass, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
-    isAuthenticated = true;
+  } else if (action === 'login') {
+    if (data.get('password') === adminPass) {
+      Astro.cookies.set('admin_auth', adminPass, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
+      isAuthenticated = true;
+    }
+  } else if (isAuthenticated && env?.CONTACT_FORM) {
+    if (action === 'delete') {
+      const key = data.get('key');
+      if (key) {
+        await env.CONTACT_FORM.delete(key.toString());
+      }
+    } else if (action === 'clear_all') {
+      const listResult = await env.CONTACT_FORM.list({ prefix: 'submission:' });
+      await Promise.all(listResult.keys.map(k => env.CONTACT_FORM.delete(k.name)));
+    } else if (action === 'bulk_delete') {
+      const keys = data.getAll('keys[]');
+      if (keys.length > 0) {
+        await Promise.all(keys.map(k => env.CONTACT_FORM.delete(k.toString())));
+      }
+    }
   }
 }
 
@@ -39,7 +55,9 @@ if (isAuthenticated && env?.CONTACT_FORM) {
     for (const key of listResult.keys) {
       const value = await env.CONTACT_FORM.get(key.name);
       if (value) {
-        submissions.push(JSON.parse(value));
+        const parsed = JSON.parse(value);
+        parsed.key = key.name;
+        submissions.push(parsed);
       }
     }
     // Sort by newest first
@@ -68,6 +86,7 @@ if (isAuthenticated && env?.CONTACT_FORM) {
       <div class="mx-auto mt-16 max-w-sm rounded-xl border border-white/10 bg-white/5 p-8 shadow-xl">
         <h2 class="mb-6 text-center text-xl font-medium text-canvas">Admin Login</h2>
         <form method="POST" class="space-y-5">
+          <input type="hidden" name="action" value="login" />
           <div>
             <label for="password" class="mb-1.5 block text-sm font-medium text-canvas">Password</label>
             <input 
@@ -86,39 +105,76 @@ if (isAuthenticated && env?.CONTACT_FORM) {
       </div>
     ) : (
       <div class="space-y-6">
-        <div class="relative max-w-md">
-          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input 
-            type="text" 
-            id="searchInput" 
-            placeholder="Search by name, email, or message..." 
-            class="block w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-canvas placeholder:text-mute focus:border-link/50 focus:outline-none focus:ring-2 focus:ring-link/20" 
-          />
+        <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+          <div class="relative w-full sm:max-w-md">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="Search by name, email, or message..." 
+              class="block w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-canvas placeholder:text-mute focus:border-link/50 focus:outline-none focus:ring-2 focus:ring-link/20" 
+            />
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <button id="exportCsvBtn" class="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-canvas transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-link/20">
+              Export CSV
+            </button>
+            <form method="POST" id="bulkDeleteForm" class="hidden">
+              <input type="hidden" name="action" value="bulk_delete" />
+              <!-- Selected keys will be dynamically injected here -->
+              <button type="submit" id="submitBulkDelete" class="hidden"></button>
+            </form>
+            <button id="bulkDeleteBtn" disabled class="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+              Delete Selected
+            </button>
+            <form method="POST" class="inline" onsubmit="return confirm('Are you sure you want to clear ALL messages? This cannot be undone.');">
+              <input type="hidden" name="action" value="clear_all" />
+              <button type="submit" class="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/20">
+                Clear All
+              </button>
+            </form>
+          </div>
         </div>
         
         <div class="overflow-x-auto rounded-xl border border-white/10 bg-white/3 shadow-xl">
           <table class="min-w-full text-left text-sm" id="messagesTable">
             <thead class="border-b border-white/10 bg-white/5 text-canvas">
               <tr>
+                <th class="p-4 w-12 text-center">
+                  <input type="checkbox" id="selectAllCheckbox" class="rounded border-white/20 bg-transparent text-link focus:ring-link/20 cursor-pointer" />
+                </th>
                 <th class="p-4 font-semibold">Date</th>
                 <th class="p-4 font-semibold">Name</th>
                 <th class="p-4 font-semibold">Email</th>
                 <th class="p-4 font-semibold">Subject</th>
                 <th class="p-4 font-semibold">Message</th>
+                <th class="p-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-white/5 text-body">
               {submissions.map((sub) => (
-                <tr class="transition-colors hover:bg-white/5">
-                  <td class="whitespace-nowrap p-4 text-mute">{new Date(sub.submittedAt).toLocaleDateString()}</td>
-                  <td class="p-4 font-medium text-canvas">{sub.name}</td>
-                  <td class="p-4"><a href={`mailto:${sub.email}`} class="text-link hover:underline">{sub.email}</a></td>
+                <tr class="transition-colors hover:bg-white/5 group row-item" data-key={sub.key}>
+                  <td class="p-4 text-center">
+                    <input type="checkbox" class="row-checkbox rounded border-white/20 bg-transparent text-link focus:ring-link/20 cursor-pointer" value={sub.key} />
+                  </td>
+                  <td class="whitespace-nowrap p-4 text-mute date-cell">{new Date(sub.submittedAt).toLocaleDateString()}</td>
+                  <td class="p-4 font-medium text-canvas name-cell">{sub.name}</td>
+                  <td class="p-4 email-cell"><a href={`mailto:${sub.email}`} class="text-link hover:underline">{sub.email}</a></td>
                   <td class="p-4">{sub.subject || '-'}</td>
-                  <td class="p-4 max-w-sm truncate" title={sub.message}>{sub.message}</td>
+                  <td class="p-4 max-w-sm truncate msg-cell" title={sub.message}>{sub.message}</td>
+                  <td class="p-4 text-right">
+                    <form method="POST" class="inline" onsubmit="return confirm('Delete this message?');">
+                      <input type="hidden" name="action" value="delete" />
+                      <input type="hidden" name="key" value={sub.key} />
+                      <button type="submit" class="text-mute hover:text-red-500 transition-colors p-1" title="Delete">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </form>
+                  </td>
                 </tr>
               ))}
               {submissions.length === 0 && (
-                <tr><td colspan="5" class="p-8 text-center text-mute">No messages have been submitted yet.</td></tr>
+                <tr id="emptyRow"><td colspan="7" class="p-8 text-center text-mute">No messages have been submitted yet.</td></tr>
               )}
             </tbody>
           </table>
@@ -131,17 +187,125 @@ if (isAuthenticated && env?.CONTACT_FORM) {
 <script>
   // Simple client-side filter
   const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+  const selectAllCheckbox = document.getElementById('selectAllCheckbox') as HTMLInputElement;
+  const rowCheckboxes = document.querySelectorAll('.row-checkbox') as NodeListOf<HTMLInputElement>;
+  const bulkDeleteBtn = document.getElementById('bulkDeleteBtn') as HTMLButtonElement;
+  const bulkDeleteForm = document.getElementById('bulkDeleteForm') as HTMLFormElement;
+  const submitBulkDelete = document.getElementById('submitBulkDelete') as HTMLButtonElement;
+  const exportCsvBtn = document.getElementById('exportCsvBtn') as HTMLButtonElement;
+
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       const term = (e.target as HTMLInputElement).value.toLowerCase();
-      const rows = document.querySelectorAll('#messagesTable tbody tr');
+      const rows = document.querySelectorAll('#messagesTable tbody tr.row-item');
       rows.forEach(row => {
-        // Skip the "No messages" row if it exists
-        if (row.querySelector('td')?.getAttribute('colspan')) return;
-        
         const text = row.textContent?.toLowerCase() || '';
         (row as HTMLElement).style.display = text.includes(term) ? '' : 'none';
       });
+      updateBulkDeleteState(); // Uncheck hidden rows if needed, or just update state
+    });
+  }
+
+  function updateBulkDeleteState() {
+    if (!bulkDeleteBtn) return;
+    const checkedCount = Array.from(rowCheckboxes).filter(cb => cb.checked && (cb.closest('tr') as HTMLElement).style.display !== 'none').length;
+    bulkDeleteBtn.disabled = checkedCount === 0;
+    bulkDeleteBtn.textContent = checkedCount > 0 ? `Delete Selected (${checkedCount})` : 'Delete Selected';
+    
+    // Update select all indeterminate/checked state
+    if (selectAllCheckbox) {
+      const visibleCheckboxes = Array.from(rowCheckboxes).filter(cb => (cb.closest('tr') as HTMLElement).style.display !== 'none');
+      if (visibleCheckboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      } else if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      } else if (checkedCount === visibleCheckboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+      }
+    }
+  }
+
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', (e) => {
+      const isChecked = (e.target as HTMLInputElement).checked;
+      rowCheckboxes.forEach(cb => {
+        if ((cb.closest('tr') as HTMLElement).style.display !== 'none') {
+          cb.checked = isChecked;
+        }
+      });
+      updateBulkDeleteState();
+    });
+  }
+
+  rowCheckboxes.forEach(cb => {
+    cb.addEventListener('change', updateBulkDeleteState);
+  });
+
+  if (bulkDeleteBtn && bulkDeleteForm) {
+    bulkDeleteBtn.addEventListener('click', () => {
+      const selected = Array.from(rowCheckboxes).filter(cb => cb.checked && (cb.closest('tr') as HTMLElement).style.display !== 'none');
+      if (selected.length === 0) return;
+      
+      if (confirm(`Are you sure you want to delete ${selected.length} message(s)? This action cannot be undone.`)) {
+        bulkDeleteForm.innerHTML = '<input type="hidden" name="action" value="bulk_delete" />';
+        selected.forEach(cb => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'keys[]';
+          input.value = cb.value;
+          bulkDeleteForm.appendChild(input);
+        });
+        bulkDeleteForm.appendChild(submitBulkDelete);
+        submitBulkDelete.click();
+      }
+    });
+  }
+
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      const selected = Array.from(rowCheckboxes).filter(cb => cb.checked && (cb.closest('tr') as HTMLElement).style.display !== 'none');
+      
+      let rowsToExport = [];
+      if (selected.length > 0) {
+        rowsToExport = selected.map(cb => cb.closest('tr'));
+      } else {
+        rowsToExport = Array.from(document.querySelectorAll('#messagesTable tbody tr.row-item')).filter(tr => (tr as HTMLElement).style.display !== 'none');
+      }
+
+      if (rowsToExport.length === 0) {
+        alert('No messages to export.');
+        return;
+      }
+
+      const csvRows = [];
+      csvRows.push(['Date', 'Name', 'Email', 'Message']);
+
+      rowsToExport.forEach(row => {
+        const date = (row.querySelector('.date-cell') as HTMLElement)?.innerText.trim() || '';
+        const name = (row.querySelector('.name-cell') as HTMLElement)?.innerText.trim() || '';
+        const email = (row.querySelector('.email-cell') as HTMLElement)?.innerText.trim() || '';
+        const msg = (row.querySelector('.msg-cell') as HTMLElement)?.innerText.trim() || '';
+        
+        const escapeCsv = (val: string) => `"${val.replace(/"/g, '""')}"`;
+        csvRows.push([escapeCsv(date), escapeCsv(name), escapeCsv(email), escapeCsv(msg)]);
+      });
+
+      const csvString = csvRows.map(e => e.join(',')).join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `contact_messages_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     });
   }
 </script>
